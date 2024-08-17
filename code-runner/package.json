@@ -1,0 +1,18 @@
+{
+  "name": "code-runner",
+  "version": "1.0.0",
+  "description": "",
+  "main": "compile.js",
+  "type": "module",
+  "dependencies": {
+    "p-limit": "^6.1.0",
+    "redis": "^4.7.0",
+    "yocto-queue": "^1.1.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

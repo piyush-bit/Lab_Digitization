@@ -1,0 +1,102 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Student {
+  id               Int          @id @default(autoincrement())
+  name             String
+  email            String       @unique
+  enrollmentNumber String       @unique @map("enrollment_number")
+  departmentId     Int
+  department       Department   @relation(fields: [departmentId], references: [id])
+  submissions      Submission[]
+  programs         Program[]
+
+  @@map("students")
+}
+
+model Program {
+  id           Int          @id @default(autoincrement())
+  name         String
+  description  String?
+  programCode  String       @unique @map("program_code")
+  departmentId Int
+  department   Department   @relation(fields: [departmentId], references: [id])
+  createdAt    DateTime     @default(now()) @map("created_at")
+  labSessions  LabSession[]
+  students     Student[]
+
+  @@map("programs")
+}
+
+model Instructor {
+  id           Int          @id @default(autoincrement())
+  name         String
+  email        String       @unique
+  labSessions  LabSession[]
+  departmentId Int?
+  Department   Department?  @relation(fields: [departmentId], references: [id])
+
+  @@map("instructors")
+}
+
+model LabSession {
+  id           Int          @id @default(autoincrement())
+  programId    Int          @map("program_id")
+  instructorId Int          @map("instructor_id")
+  sessionDate  DateTime     @map("session_date")
+  description  String?
+  program      Program      @relation(fields: [programId], references: [id])
+  instructor   Instructor   @relation(fields: [instructorId], references: [id])
+  questions    Question[]
+  submissions  Submission[]
+
+  @@map("lab_sessions")
+}
+
+model Question {
+  id            Int          @id @default(autoincrement())
+  labSessionId  Int         @map("lab_session_id")
+  description   String
+  inputsOutputs String       @map("inputs_outputs")
+  labSession    LabSession   @relation(fields: [labSessionId], references: [id])
+  submissions   Submission[]
+
+  @@map("questions")
+}
+
+model Submission {
+  id             Int        @id @default(autoincrement())
+  studentId      Int        @map("student_id")
+  questionId     Int        @map("question_id")
+  labSessionId   Int        @map("lab_session_id")
+  submissionTime DateTime   @default(now()) @map("submission_time")
+  status         String
+  resultDetails  String?    @map("result_details")
+  student        Student    @relation(fields: [studentId], references: [id])
+  labSession     LabSession @relation(fields: [labSessionId], references: [id])
+  question       Question   @relation(fields: [questionId], references: [id])
+
+  @@map("submissions")
+}
+
+model Department {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  students    Student[]
+  Instructors Instructor[]
+  programs    Program[]
+
+  @@map("departments")
+}
