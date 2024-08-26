@@ -5,13 +5,12 @@ import multer from 'multer';
 
 const router = Router();
 
+
 export default (upload: multer.Multer) => {
   router.post('/submit', upload.single('solution'), handleSubmission);
   router.get('/questions',getQuestions)
-  router.get('/questionsforstudent',getQuestionsForStudent)
-  router.post('/upload',upload.single('solution'),uploadSolution)
-
-  
+  router.use('/ins', require('./instructorRoute').default);
+  router.use('/stu',  require('./studentRoute').default);
   return router;
 };
 

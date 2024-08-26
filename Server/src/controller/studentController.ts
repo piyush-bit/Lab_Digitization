@@ -3,7 +3,8 @@ import prisma from "../database/prisma";
 import { format } from 'date-fns';
 import path from "path";
 import fs from "fs";
-import { client } from "../database/redis";
+import { client, publisher, subscriber } from "../database/redis";
+import { ClientRequest } from "http";
 
 export async function createStudent(req: Request, res: Response) {
     try {
@@ -83,11 +84,16 @@ export async function getLabSessions(req: Request, res: Response) {
         if (!studentId) {
             return res.status(400).send("studentId is required");
         }
-
-        const today = format(new Date(), 'yyyy-MM-dd');
+        const startOfDay = new Date();
+        startOfDay.setUTCHours(0, 0, 0, 0);
+        const endOfDay = new Date();
+        endOfDay.setUTCHours(23, 59, 59, 999);
         const labSessions = await prisma.labSession.findMany({
             where: {
-                sessionDate: today,
+                sessionDate: {
+                    gte: startOfDay,
+                    lte: endOfDay,
+                },
                 program: {
                     students: {
                         some: {
@@ -103,6 +109,65 @@ export async function getLabSessions(req: Request, res: Response) {
             },
         });
         res.status(200).json(labSessions);
+    } catch (err) {
+        console.log(err);
+        res.status(500).send(err);
+    }
+}
+
+export async function getStatus(req: Request, res: Response) {
+    try {
+        const { studentId , labSessionId } = req.query;
+        if (!studentId) {
+            return res.status(400).send("studentId is required");
+        }
+
+        // get the todays labsession for the student and get all the question ids
+        // get the status of each question through submissions 
+        
+        const labsession = await prisma.labSession.findUnique({
+            where: {
+                id: Number(labSessionId)
+            },
+            include: {
+                questions: true
+            }
+        })
+
+        const questionIds = labsession?.questions.map(question => question.id)
+        
+        
+
+        if (!labsession) {
+            return res.status(404).send("No lab session found for the given labSessionId");
+        }
+
+
+        const submissions = await prisma.submission.findMany({
+            where: {
+                studentId: Number(studentId),
+                labSessionId: Number(labSessionId)
+            }
+        })
+
+        const statusMap : Map<number , string> = new Map();
+        questionIds?.forEach(id => {
+            statusMap.set(id, "Not Attempted")
+        })
+
+        
+        
+        submissions?.forEach(submission => {
+            statusMap.set(submission.questionId, submission.status)
+        })
+        
+        const respose = {
+            studentId ,
+            labSessionId , 
+            status : Object.fromEntries(statusMap)
+        }
+
+        res.status(200).json(respose);
     } catch (err) {
         console.log(err);
         res.status(500).send(err);
@@ -175,17 +240,22 @@ export async function uploadSolution(req: Request, res: Response) {
                             status: data.status,
                         }
                     })
+
+                    publisher.publish(questions[0].labSessionId.toString(), JSON.stringify(submission));
+                    
                 }
             } catch (error) {
                 console.error("Error parsing message:", error);
                 res.end();
-                client.unsubscribe(channel);
+            }
+            finally{
+                subscriber.unsubscribe(channel);
             }
         };
 
         // Subscribe to channel
 
-        client.subscribe(channel, messageHandler);
+        subscriber.subscribe(channel, messageHandler);
 
         console.log("pushed to excicution queue");
         

@@ -67,7 +67,7 @@ export async function createQuestion(req: Request, res: Response) {
         const question = await prisma.question.create({
             data: {
                 description,
-                inputsOutputs : testCases , 
+                inputsOutputs : JSON.stringify(testCases),
                 labSessionId
             }
         });
@@ -97,7 +97,7 @@ export async function addQuestionToLabSession(req: Request, res: Response) {
     }
 }
 
-export async function getLabAttendance(req: Request, res: Response) {
+export async function getLabAttendance(req: Request, res: Response) {  
     try {
         const { labSessionId } = req.query;
         if (!labSessionId) {
@@ -138,8 +138,11 @@ export async function getLabAttendance(req: Request, res: Response) {
             }
         })
 
+        console.log(attendance);
+        
+
         res.status(200).json({
-            attendance: [...attendance.entries()],
+            attendance: Object.fromEntries(attendance),
         });
 
     }catch (error) {
