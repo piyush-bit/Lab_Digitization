@@ -63,12 +63,16 @@ export async function createLabSession(req: Request, res: Response) {
 // create question
 export async function createQuestion(req: Request, res: Response) {
     try {
-        const { description, testCases , labSessionId } = req.body;
+        const { description, instructorId , testCases , labSessionId } = req.body;
+        if (!description || !instructorId || !testCases || !labSessionId) {
+            return res.status(400).json({ error: "description, instructorId, testCases, and labSessionId are required" });
+        }
         const question = await prisma.question.create({
             data: {
                 description,
                 inputsOutputs : JSON.stringify(testCases),
-                labSessionId
+                labSessionId , 
+                instructorId ,
             }
         });
         res.status(201).send(question);
@@ -138,9 +142,7 @@ export async function getLabAttendance(req: Request, res: Response) {
             }
         })
 
-        console.log(attendance);
-        
-
+        // return the attendance
         res.status(200).json({
             attendance: Object.fromEntries(attendance),
         });
@@ -148,6 +150,28 @@ export async function getLabAttendance(req: Request, res: Response) {
     }catch (error) {
         console.error(error);
         res.status(500).send(error);
+    }
+}
+
+export async function getInstructorDetail(req: Request , res: Response){
+    try {
+        const { instructorId } = req.query;
+        if (!instructorId) {
+            return res.status(400).send("instructorId is required");
+        }
+
+        const instructor = await prisma.instructor.findUnique({
+            where: {
+                id: Number(instructorId)
+            },
+            include: {
+                labSessions: true
+            }
+        })
+        res.status(200).json(instructor);
+    } catch (err) {
+        console.log(err);
+        res.status(500).send(err);
     }
 }
 

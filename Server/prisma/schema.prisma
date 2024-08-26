@@ -67,7 +67,8 @@ model LabSession {
 
 model Question {
   id            Int          @id @default(autoincrement())
-  labSessionId  Int         @map("lab_session_id")
+  instructorId  Int          @default(1) @map("instructor_id")
+  labSessionId  Int          @map("lab_session_id")
   description   String
   inputsOutputs String       @map("inputs_outputs")
   labSession    LabSession   @relation(fields: [labSessionId], references: [id])

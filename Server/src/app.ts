@@ -2,12 +2,14 @@ import express from 'express';
 import multer from 'multer';
 import path from 'path';
 import routes from './routes';
+import cors from 'cors';
 
 const app = express();
 const port = 3000;
 
 // Middleware to parse JSON bodies
 app.use(express.json());
+app.use(cors())
 app.use(express.urlencoded({ extended: true }));
 
 
