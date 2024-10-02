@@ -5,11 +5,8 @@ using namespace std;
 
 int main() {
     // accept two number and print their sum
-
-    int a , b;
-
-    cin>>a>>b;
-
-    cout<<a-b;
-    
+    int a ;
+    int b;
+    cin >> a >> b;
+    cout << a-b;
 }

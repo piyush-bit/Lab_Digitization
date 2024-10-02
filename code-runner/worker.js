@@ -42,6 +42,8 @@ const processQueue = async () => {
           `${submissionJson.studentId}-${submissionJson.questionId}`,
           JSON.stringify({ ...compileResult })
         );
+        console.log("compile finsh and sent");
+        
         // run
         // console.log("testcases", submissionJson.testCases);
 
@@ -59,6 +61,7 @@ const processQueue = async () => {
           studentId: submissionJson.studentId,
           questionId: submissionJson.questionId,
           end: true,
+          status : result.failed.length === 0 ? "success" : "failed"
         };
         fs.writeFileSync(outputPath, JSON.stringify(outputJson));
 
@@ -79,6 +82,7 @@ const processQueue = async () => {
             studentId: submissionJson.studentId,
             questionId: submissionJson.questionId,
             end: true,
+            status : "failed"
           })
         );
       }
