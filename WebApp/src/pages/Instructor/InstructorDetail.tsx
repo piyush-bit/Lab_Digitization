@@ -1,7 +1,16 @@
 
 function InstructorDetail({detail}:any) {
   return (
-    <div>Welcome , {detail.name}</div>
+    <div>
+        <div>Welcome , {detail.name}</div>
+        <div>
+            {
+                detail.labSessions.map((e : any)=>{
+                    return <div>Lab Session : {e.id}</div>
+                })
+            }
+        </div>
+    </div>
   )
 }
 
