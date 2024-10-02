@@ -175,3 +175,45 @@ export async function getInstructorDetail(req: Request , res: Response){
     }
 }
 
+export async function getSubmissionsForLabSession(req: Request, res: Response) {
+    try {
+        const { labSessionId } = req.query;
+        if (!labSessionId) {
+            return res.status(400).send("labSessionId is required");
+        }
+        const submissions = await prisma.submission.findMany({
+            where: {
+                labSessionId: Number(labSessionId)
+            },
+            include: {
+                student: true
+            }
+        })
+        res.status(200).json(submissions);
+    } catch (err) {
+        console.log(err);
+        res.status(500).send(err);
+    }
+}
+
+//getlabsession info 
+export async function getLabSession(req: Request, res: Response) {
+    try {
+        const { labSessionId } = req.query;
+        if (!labSessionId) {
+            return res.status(400).send("labSessionId is required");
+        }
+        const labSession = await prisma.labSession.findUnique({
+            where: {
+                id: Number(labSessionId)
+            },
+            include: {
+                questions : true
+            }
+        })
+        res.status(200).json(labSession);
+    } catch (err) {
+        console.log(err);
+        res.status(500).send(err);
+    }
+}

@@ -177,8 +177,14 @@ export async function getStatus(req: Request, res: Response) {
 export async function uploadSolution(req: Request, res: Response) {
     try {
         const { studentId, questionId } = req.body;
+        console.log(JSON.stringify(req.body));
+        
         const solutionFile = req.file;
 
+        if (!questionId) {
+            return res.status(400).send({ error: 'Question id is required' });
+        }
+        
         // Check if studentId and questionId are valid
         const questions = await prisma.question.findMany({
             where: {
@@ -226,18 +232,21 @@ export async function uploadSolution(req: Request, res: Response) {
         const messageHandler = async (message: string) => {
             try {
                 const data = JSON.parse(message);
+                console.log("message received", data);
+                
                 res.write(`data: ${JSON.stringify(data)}\n\n`);
 
                 if (data.end) {
                     console.log("Ending connection");
                     res.end();
-                    client.unsubscribe(channel);
+                    subscriber.unsubscribe(channel);
                     const submission = await prisma.submission.create({
                         data: {
                             studentId: Number(studentId),
                             questionId: Number(questionId),
                             labSessionId: questions[0].labSessionId as number,
-                            status: data.status,
+                            resultDetails : JSON.stringify(data),
+                            status: data.status ?? "Failed",
                         }
                     })
 
@@ -248,9 +257,7 @@ export async function uploadSolution(req: Request, res: Response) {
                 console.error("Error parsing message:", error);
                 res.end();
             }
-            finally{
-                subscriber.unsubscribe(channel);
-            }
+            
         };
 
         // Subscribe to channel
@@ -262,7 +269,7 @@ export async function uploadSolution(req: Request, res: Response) {
             // Handle client disconnect
             req.on('close', () => {
             console.log("Client disconnected");
-            client.unsubscribe(channel);
+            subscriber.unsubscribe(channel);
             });
 
 

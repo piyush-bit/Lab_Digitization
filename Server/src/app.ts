@@ -5,6 +5,7 @@ import routes from './routes';
 import cors from 'cors';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import { handleConnection, handleDisconnection } from './socket/labSessionMonitor';
 
 const app = express();
 const port = 3000;
@@ -16,8 +17,14 @@ const io = new Server(server, {
   },
 });
 
-
-
+io.on('connection', (socket) => {
+  console.log(`User connected: ${socket.id}`);
+  handleConnection(io, socket);
+});
+io.on('disconnect', (socket) => {
+  console.log(`User disconnected: ${socket.id}`);
+  handleDisconnection(socket);
+});
 
 // Middleware to parse JSON bodies
 app.use(express.json());
@@ -25,23 +32,14 @@ app.use(cors())
 app.use(express.urlencoded({ extended: true }));
 
 
-// Setup Multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, './uploads'));
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  },
-});
-const upload = multer({ storage });
+
 
 // Routes
-app.use('/api', routes(upload));
+app.use('/api', routes());
 
 
 
 // Start the server
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });

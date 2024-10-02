@@ -1,5 +1,6 @@
 import { Request, Response, Router } from 'express';
 import { createStudent, getLabSessions, getQuestions, getStatus, uploadSolution } from '../controller/studentController';
+import { upload } from '.';
 
 const studentRouter = Router();
 //create student
@@ -15,7 +16,7 @@ studentRouter.get('/labsessions', getLabSessions);
 studentRouter.get('/status', getStatus);
 
 //upload solution
-studentRouter.post('/submit', uploadSolution);
+studentRouter.post('/submit', upload.single('solution'), uploadSolution);
 
 studentRouter.get('/' , (req: Request, res: Response) => {
     res.send("hello")
