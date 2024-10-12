@@ -174,9 +174,31 @@ export async function getStatus(req: Request, res: Response) {
     }
 }
 
+export async function getStudent(req: Request, res: Response) {
+    try {
+        const { studentId } = req.query;
+        if (!studentId) {
+            return res.status(400).send("studentId is required");
+        }
+        const student = await prisma.student.findUnique({
+            where: {
+                id: Number(studentId),
+            },
+        });
+        if(!student){
+            return res.status(404).send("Student not found");
+        }else{
+            res.status(200).json(student);
+        }
+    } catch (err) {
+        console.log(err);
+        res.status(500).send(err);
+    }
+}
+
 export async function uploadSolution(req: Request, res: Response) {
     try {
-        const { studentId, questionId } = req.body;
+        const { studentId, questionId , userOutput } = req.body;
         console.log(JSON.stringify(req.body));
         
         const solutionFile = req.file;
@@ -194,6 +216,20 @@ export async function uploadSolution(req: Request, res: Response) {
 
         if (!questions || questions.length === 0) {
             return res.status(400).send({ error: 'Invalid question id' });
+        }
+
+        if (!questions[0].testCaseBased){
+            const submission = await prisma.submission.create({
+                data: {
+                    studentId: Number(studentId),
+                    questionId: Number(questionId),
+                    labSessionId: questions[0].labSessionId as number,
+                    resultDetails : JSON.stringify({output : userOutput}),
+                    solution: solutionFile?.path,
+                    status: "pending",
+                }
+            })
+            return res.status(200).send(submission);
         }
 
 

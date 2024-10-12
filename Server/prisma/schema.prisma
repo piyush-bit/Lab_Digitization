@@ -73,8 +73,14 @@ model Question {
   inputsOutputs String       @map("inputs_outputs")
   labSession    LabSession   @relation(fields: [labSessionId], references: [id])
   submissions   Submission[]
-
+  testCaseBased Boolean      @default(false)
   @@map("questions")
+}
+
+enum SubmissionStatus {
+  passed
+  failed
+  pending
 }
 
 model Submission {
@@ -83,8 +89,9 @@ model Submission {
   questionId     Int        @map("question_id")
   labSessionId   Int        @map("lab_session_id")
   submissionTime DateTime   @default(now()) @map("submission_time")
-  status         String
-  resultDetails  String?    @map("result_details")
+  status         SubmissionStatus
+  resultDetails  String?    
+  solution       String?    
   student        Student    @relation(fields: [studentId], references: [id])
   labSession     LabSession @relation(fields: [labSessionId], references: [id])
   question       Question   @relation(fields: [questionId], references: [id])

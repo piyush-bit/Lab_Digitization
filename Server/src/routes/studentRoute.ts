@@ -1,5 +1,5 @@
 import { Request, Response, Router } from 'express';
-import { createStudent, getLabSessions, getQuestions, getStatus, uploadSolution } from '../controller/studentController';
+import { createStudent, getLabSessions, getQuestions, getStatus, getStudent, uploadSolution } from '../controller/studentController';
 import { upload } from '.';
 
 const studentRouter = Router();
@@ -18,8 +18,6 @@ studentRouter.get('/status', getStatus);
 //upload solution
 studentRouter.post('/submit', upload.single('solution'), uploadSolution);
 
-studentRouter.get('/' , (req: Request, res: Response) => {
-    res.send("hello")
-})
+studentRouter.get('/' , getStudent)
 
 export default studentRouter;
