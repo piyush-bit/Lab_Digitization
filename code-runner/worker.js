@@ -61,7 +61,7 @@ const processQueue = async () => {
           studentId: submissionJson.studentId,
           questionId: submissionJson.questionId,
           end: true,
-          status : result.failed.length === 0 ? "success" : "failed"
+          status : result.failed.length === 0 ? "passed" : "failed"
         };
         fs.writeFileSync(outputPath, JSON.stringify(outputJson));
 
