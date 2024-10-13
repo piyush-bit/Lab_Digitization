@@ -12,21 +12,31 @@ type Student = {
   departmentId: number;
 };
 
+export enum SubmissionStatus {
+  Failed = 'failed',
+  Passed = 'passed',
+  Pending = 'pending',
+}
+
 type Submission = {
   id: number;
   studentId: number;
   questionId: number;
   labSessionId: number;
   submissionTime: string;
-  status: 'failed' | 'passed' | 'pending';
+  status: SubmissionStatus;
   resultDetails: string | null;
+  solution: string | null;
   student: Student;
+  labSession: LabSession;
+  question: Question;
 };
 
 type ModalProps = {
   isOpen: boolean;
   onClose: () => void;
   submission: Submission | null;
+  fetchSubmissions : () => void;
 };
 
 interface AddQuestionModalProps {
@@ -55,8 +65,10 @@ type LabSession = {
   questions: Question[];
 };
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, submission }) => {
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, submission , fetchSubmissions }) => {
   if (!isOpen || !submission) return null;
+
+  console.log('Rendering Modal with submission:', submission);
 
   let resultDetails;
   try {
@@ -64,6 +76,24 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, submission }) => {
   } catch (error) {
     resultDetails = { error: 'Failed to parse result details' };
   }
+
+  const handleAccept = async () => {
+    await axios.post('http://localhost:3000/api/ins/judge', {
+      submissionId: submission.id,
+      verdict: 'passed'
+    });
+    onClose();
+    fetchSubmissions();
+  };
+
+  const handleReject = async () => {
+    await axios.post('http://localhost:3000/api/ins/judge', {
+      submissionId: submission.id,
+      verdict: 'failed'
+    });
+    onClose();
+    fetchSubmissions();
+  };
 
   return ReactDOM.createPortal(
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
@@ -84,6 +114,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, submission }) => {
         </div>
         <div className="mb-4">
           <h3 className="text-xl font-semibold mb-2">Result Details</h3>
+          
           {resultDetails.passed && (
             <div>
               <p><strong>Passed Tests:</strong> {resultDetails.passed.length}</p>
@@ -102,6 +133,12 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, submission }) => {
             </div>
           )}
           {resultDetails.time && <p><strong>Execution Time:</strong> {resultDetails.time}ms</p>}
+          {submission.solution && <p style={{ whiteSpace: 'pre-line' }}><strong>Solution:</strong> <br /> {submission.solution}</p>}
+          {resultDetails.output && <p style={{ whiteSpace: 'pre-line' }}><strong>Output:</strong> <br /> {resultDetails.output}</p>}
+          {submission.status == "pending" && <div className="flex gap-2">
+            <button className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded" onClick={handleAccept}>Accept</button>
+            <button className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded" onClick={handleReject}>Reject</button>
+            </div>}
         </div>
         <button
           onClick={onClose}
@@ -331,6 +368,7 @@ function MonitorLab() {
         isOpen={!!selectedSubmission}
         onClose={() => setSelectedSubmission(null)}
         submission={selectedSubmission}
+        fetchSubmissions={fetchSubmissions}
       />
 
       {/* Add Question Modal */}
