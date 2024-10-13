@@ -217,3 +217,30 @@ export async function getLabSession(req: Request, res: Response) {
         res.status(500).send(err);
     }
 }
+
+export async function judgeSubmission(req: Request, res: Response) {
+    try {
+        const { submissionId, verdict } = req.body;
+        if (!submissionId) {
+            return res.status(400).send("submissionId is required");
+        }
+        if (!verdict) {
+            return res.status(400).send("verdict is required");
+        }
+        if (verdict !== "passed" && verdict !== "failed") {
+            return res.status(400).send("Invalid verdict");
+        }
+        const submission = await prisma.submission.update({
+            where: {
+                id: Number(submissionId)
+            },
+            data: {
+                status: verdict
+            }
+        })
+        res.status(200).json(submission);
+    } catch (err) {
+        console.log(err);
+        res.status(500).send(err);
+    }
+}

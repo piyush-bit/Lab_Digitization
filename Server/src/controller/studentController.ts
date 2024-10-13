@@ -219,13 +219,14 @@ export async function uploadSolution(req: Request, res: Response) {
         }
 
         if (!questions[0].testCaseBased){
+            const fileContent = solutionFile && fs.readFileSync(solutionFile.path, 'utf8');
             const submission = await prisma.submission.create({
                 data: {
                     studentId: Number(studentId),
                     questionId: Number(questionId),
                     labSessionId: questions[0].labSessionId as number,
                     resultDetails : JSON.stringify({output : userOutput}),
-                    solution: solutionFile?.path,
+                    solution: fileContent,
                     status: "pending",
                 }
             })
@@ -276,6 +277,7 @@ export async function uploadSolution(req: Request, res: Response) {
                     console.log("Ending connection");
                     res.end();
                     subscriber.unsubscribe(channel);
+                    const fileContent = solutionFile && fs.readFileSync(solutionFilePath, 'utf8');
                     const submission = await prisma.submission.create({
                         data: {
                             studentId: Number(studentId),
@@ -283,6 +285,7 @@ export async function uploadSolution(req: Request, res: Response) {
                             labSessionId: questions[0].labSessionId as number,
                             resultDetails : JSON.stringify(data),
                             status: data.status ?? "Failed",
+                            solution: fileContent,
                         }
                     })
 

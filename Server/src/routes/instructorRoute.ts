@@ -1,5 +1,5 @@
 import { Request, Response, Router } from 'express';
-import { addQuestionToLabSession, createInstructor, createLabSession, createQuestion, getInstructorDetail, getLabAttendance, getLabSession, getSubmissionsForLabSession } from '../controller/InstructorController';
+import { addQuestionToLabSession, createInstructor, createLabSession, createQuestion, getInstructorDetail, getLabAttendance, getLabSession, getSubmissionsForLabSession, judgeSubmission } from '../controller/InstructorController';
 
 
 const instructorRoute = Router();
@@ -27,6 +27,9 @@ instructorRoute.get('/submissions', getSubmissionsForLabSession)
 
 //get labsession 
 instructorRoute.get('/labsession', getLabSession)
+
+// judge solution
+instructorRoute.post('/judge', judgeSubmission)
 
 instructorRoute.get('/' , (req: Request, res: Response) => {
     res.send("hello")
